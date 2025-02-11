@@ -17,14 +17,8 @@
       }
     </style>
     <!-- React and ReactDOM from CDN -->
-    <script
-      crossorigin
-      src="https://unpkg.com/react@16/umd/react.development.js"
-    ></script>
-    <script
-      crossorigin
-      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
-    ></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
     <!-- Babel for JSX transpilation -->
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
     <!-- Three.js v0.124.0 and OrbitControls -->
@@ -33,8 +27,9 @@
   </head>
   <body>
     <div id="root"></div>
-    <script type="text/babel">
-      // Ensure THREE is defined by referencing the global window.THREE.
+    <!-- Notice the data-presets attribute added below -->
+    <script type="text/babel" data-presets="env,react">
+      // Reference THREE from the global window.
       const THREE = window.THREE;
       
       // Scene Component: Sets up the Three.js scene, camera, lights, and controls.
@@ -111,21 +106,16 @@
       
         // Public method to add a placeholder 3D object (a box) to the scene.
         addBox(product) {
-          // Create a simple box geometry.
           const geometry = new THREE.BoxGeometry(1, 1, 1);
-          // Use a random color for visual variety.
           const material = new THREE.MeshLambertMaterial({
             color: Math.random() * 0xffffff,
           });
           const box = new THREE.Mesh(geometry, material);
-      
-          // Position the box at a random location on the plane.
           box.position.set(
             (Math.random() - 0.5) * 40,
             0.5, // Lift the box slightly above the plane.
             (Math.random() - 0.5) * 40
           );
-      
           this.scene.add(box);
           this.objects.push(box);
         }
@@ -140,13 +130,16 @@
         }
       }
       
+      // Attach Scene to the global window object.
+      window.Scene = Scene;
+      
       // Main App Component.
       function App() {
         const [shoppingList, setShoppingList] = React.useState([]);
         const [uploadedImage, setUploadedImage] = React.useState(null);
         const sceneRef = React.useRef(null);
       
-        // Define some example products.
+        // Example products.
         const products = [
           { id: 1, name: "Paver", price: 5.0, link: "https://example.com/paver" },
           { id: 2, name: "Tree", price: 25.0, link: "https://example.com/tree" },
@@ -162,9 +155,7 @@
           }
         };
       
-        // Handle adding a product:
-        // 1. Update the shopping list.
-        // 2. Tell the Scene component to add a placeholder 3D object.
+        // Add a product and update the shopping list.
         const addProduct = (product) => {
           setShoppingList((prevList) => {
             const existing = prevList.find((item) => item.id === product.id);
@@ -185,7 +176,7 @@
       
         return (
           <div style={{ display: "flex", height: "100vh" }}>
-            {/* Sidebar with controls */}
+            {/* Sidebar */}
             <div
               style={{
                 width: "300px",
@@ -247,7 +238,7 @@
                 )}
               </div>
             </div>
-            {/* 3D Scene container */}
+            {/* 3D Scene */}
             <div style={{ flexGrow: 1, position: "relative" }}>
               <Scene ref={sceneRef} />
             </div>
