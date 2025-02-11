@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Backyard 3D Planner</title>
+    <style>
+      /* Basic reset and layout */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: Arial, sans-serif;
+      }
+      #root {
+        height: 100%;
+      }
+    </style>
+    <!-- React and ReactDOM from CDN -->
+    <script
+      crossorigin
+      src="https://unpkg.com/react@16/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+    ></script>
+    <!-- Babel for JSX transpilation -->
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- Three.js v0.124.0 and OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.124.0/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.124.0/controls/OrbitControls.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      // Ensure THREE is defined by referencing the global window.THREE.
+      const THREE = window.THREE;
+      
+      // Scene Component: Sets up the Three.js scene, camera, lights, and controls.
+      class Scene extends React.Component {
+        constructor(props) {
+          super(props);
+          this.mountRef = React.createRef();
+          this.objects = []; // To store added 3D objects.
+        }
+      
+        componentDidMount() {
+          const width = this.mountRef.current.clientWidth;
+          const height = this.mountRef.current.clientHeight;
+      
+          // Create the scene.
+          this.scene = new THREE.Scene();
+      
+          // Create the camera.
+          this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
+          this.camera.position.set(0, 10, 20);
+      
+          // Create the renderer.
+          this.renderer = new THREE.WebGLRenderer({ antialias: true });
+          this.renderer.setSize(width, height);
+          this.mountRef.current.appendChild(this.renderer.domElement);
+      
+          // Add ambient light.
+          const ambientLight = new THREE.AmbientLight(0x404040);
+          this.scene.add(ambientLight);
+      
+          // Add directional light.
+          const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+          directionalLight.position.set(10, 10, 5);
+          this.scene.add(directionalLight);
+      
+          // Create a plane to represent the backyard.
+          const planeGeometry = new THREE.PlaneGeometry(100, 100);
+          const planeMaterial = new THREE.MeshLambertMaterial({ color: 0xdddddd });
+          const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+          plane.rotation.x = -Math.PI / 2;
+          this.scene.add(plane);
+      
+          // Set up OrbitControls.
+          this.controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+      
+          // Start the render loop.
+          this.animate();
+      
+          // Adjust on window resize.
+          window.addEventListener("resize", this.handleWindowResize);
+        }
+      
+        componentWillUnmount() {
+          window.removeEventListener("resize", this.handleWindowResize);
+          cancelAnimationFrame(this.frameId);
+          if (this.controls) {
+            this.controls.dispose();
+          }
+        }
+      
+        handleWindowResize = () => {
+          const width = this.mountRef.current.clientWidth;
+          const height = this.mountRef.current.clientHeight;
+          this.renderer.setSize(width, height);
+          this.camera.aspect = width / height;
+          this.camera.updateProjectionMatrix();
+        };
+      
+        animate = () => {
+          this.frameId = requestAnimationFrame(this.animate);
+          this.controls.update();
+          this.renderer.render(this.scene, this.camera);
+        };
+      
+        // Public method to add a placeholder 3D object (a box) to the scene.
+        addBox(product) {
+          // Create a simple box geometry.
+          const geometry = new THREE.BoxGeometry(1, 1, 1);
+          // Use a random color for visual variety.
+          const material = new THREE.MeshLambertMaterial({
+            color: Math.random() * 0xffffff,
+          });
+          const box = new THREE.Mesh(geometry, material);
+      
+          // Position the box at a random location on the plane.
+          box.position.set(
+            (Math.random() - 0.5) * 40,
+            0.5, // Lift the box slightly above the plane.
+            (Math.random() - 0.5) * 40
+          );
+      
+          this.scene.add(box);
+          this.objects.push(box);
+        }
+      
+        render() {
+          return (
+            <div
+              style={{ width: "100%", height: "100%" }}
+              ref={this.mountRef}
+            ></div>
+          );
+        }
+      }
+      
+      // Main App Component.
+      function App() {
+        const [shoppingList, setShoppingList] = React.useState([]);
+        const [uploadedImage, setUploadedImage] = React.useState(null);
+        const sceneRef = React.useRef(null);
+      
+        // Define some example products.
+        const products = [
+          { id: 1, name: "Paver", price: 5.0, link: "https://example.com/paver" },
+          { id: 2, name: "Tree", price: 25.0, link: "https://example.com/tree" },
+          { id: 3, name: "Gravel", price: 3.0, link: "https://example.com/gravel" },
+        ];
+      
+        // Handle image upload for the backyard photo.
+        const handleFileUpload = (e) => {
+          if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const imageUrl = URL.createObjectURL(file);
+            setUploadedImage(imageUrl);
+          }
+        };
+      
+        // Handle adding a product:
+        // 1. Update the shopping list.
+        // 2. Tell the Scene component to add a placeholder 3D object.
+        const addProduct = (product) => {
+          setShoppingList((prevList) => {
+            const existing = prevList.find((item) => item.id === product.id);
+            if (existing) {
+              return prevList.map((item) =>
+                item.id === product.id
+                  ? { ...item, quantity: item.quantity + 1 }
+                  : item
+              );
+            } else {
+              return [...prevList, { ...product, quantity: 1 }];
+            }
+          });
+          if (sceneRef.current) {
+            sceneRef.current.addBox(product);
+          }
+        };
+      
+        return (
+          <div style={{ display: "flex", height: "100vh" }}>
+            {/* Sidebar with controls */}
+            <div
+              style={{
+                width: "300px",
+                padding: "10px",
+                boxSizing: "border-box",
+                background: "#f0f0f0",
+                overflowY: "auto",
+              }}
+            >
+              <h2>Backyard Planner</h2>
+              <div>
+                <h3>Upload Backyard Photo</h3>
+                <input type="file" accept="image/*" onChange={handleFileUpload} />
+                {uploadedImage && (
+                  <img
+                    src={uploadedImage}
+                    alt="Uploaded backyard"
+                    style={{ width: "100%", marginTop: "10px" }}
+                  />
+                )}
+              </div>
+              <div>
+                <h3>Products</h3>
+                {products.map((product) => (
+                  <div
+                    key={product.id}
+                    style={{
+                      padding: "5px",
+                      border: "1px solid #ccc",
+                      marginBottom: "5px",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => addProduct(product)}
+                  >
+                    {product.name} - ${product.price.toFixed(2)}
+                  </div>
+                ))}
+              </div>
+              <div>
+                <h3>Shopping List</h3>
+                {shoppingList.length === 0 ? (
+                  <p>No products added.</p>
+                ) : (
+                  <ul style={{ paddingLeft: "20px" }}>
+                    {shoppingList.map((item) => (
+                      <li key={item.id}>
+                        {item.name} x {item.quantity} = $
+                        {(item.price * item.quantity).toFixed(2)}{" "}
+                        <a
+                          href={item.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Buy
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+            {/* 3D Scene container */}
+            <div style={{ flexGrow: 1, position: "relative" }}>
+              <Scene ref={sceneRef} />
+            </div>
+          </div>
+        );
+      }
+      
+      // Render the application.
+      ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+  </body>
+</html>
