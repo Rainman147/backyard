@@ -27,8 +27,8 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Notice the data-presets attribute for Babel -->
-    <script type="text/babel" data-presets="env,react">
+    <!-- Changed data-presets to "es2015,react" -->
+    <script type="text/babel" data-presets="es2015,react">
       // Wait until THREE and OrbitControls are loaded before rendering the app.
       function waitForTHREEAndRender() {
         if (window.THREE && window.THREE.OrbitControls) {
