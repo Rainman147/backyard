@@ -21,13 +21,13 @@
     <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
     <!-- Babel for JSX transpilation -->
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <!-- Three.js v0.124.0 and OrbitControls -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.124.0/three.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.124.0/controls/OrbitControls.js"></script>
+    <!-- Three.js and OrbitControls from unpkg -->
+    <script src="https://unpkg.com/three@0.124.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.124.0/examples/js/controls/OrbitControls.js"></script>
   </head>
   <body>
     <div id="root"></div>
-    <!-- Changed data-presets to "es2015,react" -->
+    <!-- Using es2015 and react presets -->
     <script type="text/babel" data-presets="es2015,react">
       // Wait until THREE and OrbitControls are loaded before rendering the app.
       function waitForTHREEAndRender() {
